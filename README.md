@@ -70,7 +70,24 @@ Si todo va bien, deberías ver que expone `http://0.0.0.0:8001`.
 
 ---
 
-### 5. Probar el endpoint
+### 5. Instalar y arrancar el frontend
+Si tienes una carpeta `frontend/`, muévete a ella e instala dependencias:
+
+```bash
+cd frontend
+npm install
+```
+
+Después arranca el servidor de desarrollo:
+```bash
+npm run dev
+```
+
+Por defecto debería estar disponible en `http://localhost:3000` (dependiendo del framework que uses).
+
+---
+
+### 6. Probar el endpoint
 #### Desde PowerShell
 Si el endpoint `/query` espera **form-data/x-www-form-urlencoded**:
 ```powershell
@@ -126,4 +143,5 @@ docker compose logs -f backend
 2. `docker compose exec ollama ollama pull llama3.1:8b` *(o `:8b-instruct`)*  
 3. `docker compose up -d chroma`  
 4. `docker compose up -d --build backend`  
-5. Probar en `http://localhost:8001/query`
+5. `cd frontend && npm install && npm run dev`  
+6. Probar en `http://localhost:3000` (frontend) o `http://localhost:8001/query` (backend directo)

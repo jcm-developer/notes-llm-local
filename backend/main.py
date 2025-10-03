@@ -1,4 +1,5 @@
 from fastapi import FastAPI, UploadFile, Form
+from fastapi.middleware.cors import CORSMiddleware
 import chromadb
 import pypdf
 import ollama
@@ -6,10 +7,18 @@ import os
 
 app = FastAPI()
 
+# 🔹 Configuración CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Conectar a Chroma (en modo server)
 chroma_client = chromadb.HttpClient(host="chroma", port=8000)
 collection = chroma_client.get_or_create_collection("RAG")
-
 
 def upload_pdf_to_chroma(file_path: str):
     with open(file_path, "rb") as f:
