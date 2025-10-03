@@ -18,7 +18,7 @@ def query(question):
 
 if __name__ == "__main__":
     # 👇 Ajusta el nombre del PDF a uno que tengas en tu proyecto
-    upload_pdf("mamiferos.pdf")
+    # upload_pdf("mamiferos.pdf")
 
     # 👇 Pregunta de ejemplo
     query("Qué son los mamíferos?")
