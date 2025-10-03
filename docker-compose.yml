@@ -1,19 +1,38 @@
 services:
-  backend:
-    build: ./backend
+  ollama:
+    image: ollama/ollama:latest
+    container_name: notes-llm-local-ollama
     ports:
-      - "8001:8001"
+      - "11434:11434"
     volumes:
-      - ./backend:/app
-    depends_on:
-      - chroma
-    environment:
-      - OLLAMA_HOST=http://host.docker.internal:11434
-    restart: always
+      # Volumen persistente para que el modelo quede guardado y no tengas que descargarlo otra vez
+      - ollama-data:/root/.ollama
+    restart: unless-stopped
 
   chroma:
     image: chromadb/chroma
     ports:
       - "8000:8000"
     volumes:
-      - ./chroma_data:/chroma/chroma
+      - ./chroma/data:/chroma/data
+
+  backend:
+    # Ajusta la ruta si tu Dockerfile está en otro sitio
+    build:
+      context: ./backend
+    container_name: notes-llm-local-backend
+    environment:
+      # El backend hablará con el servicio "ollama" (resolución por Docker DNS)
+      OLLAMA_HOST: http://ollama:11434
+      # Si tu backend lee el nombre del modelo por env var, puedes usar esta:
+      # OLLAMA_MODEL: llama3.1:8b
+    ports:
+      - "8001:8001"
+    depends_on:
+      - ollama
+    volumes:
+      - ./backend:/app
+    restart: unless-stopped
+
+volumes:
+  ollama-data:
