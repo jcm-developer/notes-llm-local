@@ -17,20 +17,22 @@ const newTitle = ref("")
         <hr />
         <br>
         <button class="button" @click="emit('new')">+ Nueva conversación</button>
+
         <ul class="chat-list">
-            <li v-for="c in conversations" :key="c.id" :class="{ active: c.id === activeId }">
-                <!-- Si está en modo edición -->
+            <li v-for="c in conversations" :key="c.id" :class="{ active: c.id === activeId }"
+                @click="emit('select', c.id)">
+                <!-- Modo edición -->
                 <template v-if="editingId === c.id">
                     <input v-model="newTitle" @keyup.enter="emit('rename', c.id, newTitle); editingId = null"
-                        @blur="emit('rename', c.id, newTitle); editingId = null" class="rename-input" />
+                        @blur="emit('rename', c.id, newTitle); editingId = null" class="rename-input" @click.stop />
                 </template>
 
                 <!-- Vista normal -->
                 <template v-else>
-                    <span @click="emit('select', c.id)">{{ c.title }}</span>
+                    <span>{{ c.title }}</span>
                     <div class="actions">
-                        <button @click="editingId = c.id; newTitle = c.title">✏️</button>
-                        <button @click="emit('delete', c.id)">🗑️</button>
+                        <button @click.stop="editingId = c.id; newTitle = c.title">✏️</button>
+                        <button @click.stop="emit('delete', c.id)">🗑️</button>
                     </div>
                 </template>
             </li>
@@ -46,16 +48,23 @@ const newTitle = ref("")
 }
 
 .chat-list li {
-    padding: 1px 16px;
+    padding: 0px 12px;
     border-radius: 18px;
     cursor: pointer;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: 8px;
+}
+
+.chat-list li:hover {
+    background: #33363a;
+    /* hover gris más claro */
 }
 
 .chat-list li.active {
-    background: #374151;
+    background: #2a2d31;
+    /* activo gris oscuro */
     font-weight: bold;
 }
 

@@ -1,10 +1,12 @@
 <script setup>
-import { ref } from "vue"
+import { ref, nextTick, watch, onMounted } from "vue"
 
 const props = defineProps({
     conversation: Object
 })
 const inputText = ref("")
+const isTyping = ref(false)
+const chatBody = ref(null)   // 👈 ref al contenedor
 
 const sendMessage = async () => {
     if (!inputText.value.trim()) return
@@ -12,6 +14,8 @@ const sendMessage = async () => {
     props.conversation.messages.push({ role: "user", content: inputText.value })
     const myMessage = inputText.value
     inputText.value = ""
+
+    isTyping.value = true
 
     try {
         const formData = new FormData()
@@ -25,14 +29,45 @@ const sendMessage = async () => {
 
         props.conversation.messages.push({ role: "assistant", content: data.answer })
 
-        // renombrar la conversación con el primer mensaje si no tiene título
-        if (props.conversation.title.startsWith("Conversación") && props.conversation.messages.length === 2) {
+        if (
+            props.conversation.title.startsWith("Conversación") &&
+            props.conversation.messages.length === 2
+        ) {
             props.conversation.title = myMessage.slice(0, 30) + "..."
         }
     } catch (err) {
-        props.conversation.messages.push({ role: "assistant", content: "⚠️ Error al consultar el LLM" })
+        props.conversation.messages.push({
+            role: "assistant",
+            content: "⚠️ Error al consultar el LLM",
+        })
+    } finally {
+        isTyping.value = false
     }
 }
+
+// 👉 Formateo básico Markdown
+function formatText(text) {
+    let html = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+    html = html.replace(/\*(.*?)\*/g, "<em>$1</em>")
+    return html
+}
+
+// 👉 Función de scroll
+const scrollToBottom = async () => {
+    await nextTick()
+    if (chatBody.value) {
+        chatBody.value.lastElementChild?.scrollIntoView({ behavior: "smooth" })
+    }
+}
+
+// 👀 Auto-scroll al cambiar mensajes o typing
+watch(
+    () => [props.conversation.messages.length, isTyping.value],
+    scrollToBottom
+)
+
+// 👀 Auto-scroll al cargar la primera vez
+onMounted(scrollToBottom)
 </script>
 
 <template>
@@ -41,9 +76,18 @@ const sendMessage = async () => {
         <hr />
 
         <!-- cuerpo de chat -->
-        <div class="chat-body">
+        <div class="chat-body" ref="chatBody">
             <div v-for="(msg, i) in conversation.messages" :key="i" class="chat-message" :class="msg.role">
-                <p style="font-size: 14px;">{{ msg.content }}</p>
+                <p style="font-size: 14px;" v-html="formatText(msg.content)"></p>
+            </div>
+
+            <!-- indicador de escribiendo -->
+            <div v-if="isTyping" class="chat-message assistant">
+                <div class="typing">
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                </div>
             </div>
         </div>
 
@@ -85,6 +129,7 @@ const sendMessage = async () => {
     align-self: flex-end;
     background: #272c31;
     color: #e5e7eb;
+    border-radius: 18px;
 }
 
 .chat-message.assistant {
@@ -93,6 +138,7 @@ const sendMessage = async () => {
     color: #e5e7eb;
 }
 
+/* barra input */
 .buttons {
     display: flex;
     align-items: center;
@@ -108,5 +154,42 @@ const sendMessage = async () => {
 .buttons button {
     width: 15%;
     padding: 16px;
+}
+
+/* animación typing */
+.typing {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    padding: 4px 0;
+}
+
+.dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #e5e7eb;
+    opacity: 0.5;
+    animation: blink 1.2s infinite;
+}
+
+.dot:nth-child(2) {
+    animation-delay: .2s;
+}
+
+.dot:nth-child(3) {
+    animation-delay: .4s;
+}
+
+@keyframes blink {
+
+    0%,
+    100% {
+        opacity: .2
+    }
+
+    50% {
+        opacity: 1
+    }
 }
 </style>
